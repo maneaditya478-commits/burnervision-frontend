@@ -3,6 +3,7 @@ import { AppProvider, useApp } from './context/AppContext';
 import { Sidebar } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
 import { DisclaimerBanner } from './components/layout/DisclaimerBanner';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 
 import { DashboardPage } from './pages/DashboardPage';
 import { NewInspectionPage } from './pages/NewInspectionPage';
@@ -13,7 +14,7 @@ import { SystemStatusPage } from './pages/SystemStatusPage';
 import { SettingsPage } from './pages/SettingsPage';
 
 function MainLayout() {
-  const { activeTab } = useApp();
+  const { activeTab, setActiveTab } = useApp();
 
   const renderContent = () => {
     switch (activeTab) {
@@ -51,7 +52,9 @@ function MainLayout() {
 
         {/* Scrollable Page Body */}
         <main className="flex-1 overflow-y-auto p-6 space-y-6">
-          {renderContent()}
+          <ErrorBoundary onReset={() => setActiveTab('dashboard')}>
+            {renderContent()}
+          </ErrorBoundary>
         </main>
       </div>
     </div>

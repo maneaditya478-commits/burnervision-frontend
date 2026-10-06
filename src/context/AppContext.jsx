@@ -17,8 +17,13 @@ export function AppProvider({ children }) {
   });
 
   const [history, setHistory] = useState(() => {
-    const saved = localStorage.getItem('burnervision_history');
-    return saved ? JSON.parse(saved) : INITIAL_INSPECTIONS_HISTORY;
+    try {
+      const saved = localStorage.getItem('burnervision_history');
+      return saved ? JSON.parse(saved) : INITIAL_INSPECTIONS_HISTORY;
+    } catch (e) {
+      console.warn('[BurnerVision] localStorage initial read error:', e);
+      return INITIAL_INSPECTIONS_HISTORY;
+    }
   });
 
   const [currentReport, setCurrentReport] = useState(null);
@@ -40,9 +45,23 @@ export function AppProvider({ children }) {
     }
   }, [isDarkMode]);
 
-  // Save history to localStorage
+  // Save history to localStorage safely with quota protection
   useEffect(() => {
-    localStorage.setItem('burnervision_history', JSON.stringify(history));
+    try {
+      const sanitizedHistory = history.map(item => {
+        // If original_image is a huge data URL (> 50KB), keep metadata and truncate heavy binary for localStorage
+        if (typeof item.original_image === 'string' && item.original_image.startsWith('data:') && item.original_image.length > 50000) {
+          return {
+            ...item,
+            original_image: item.image_meta?.filename ? `[Captured: ${item.image_meta.filename}]` : '[Uploaded Image]'
+          };
+        }
+        return item;
+      });
+      localStorage.setItem('burnervision_history', JSON.stringify(sanitizedHistory));
+    } catch (e) {
+      console.warn('[BurnerVision] localStorage save warning (quota/restricted):', e);
+    }
   }, [history]);
 
   // Periodic health check
@@ -59,6 +78,9 @@ export function AppProvider({ children }) {
 
   // Run analysis pipeline flow
   const runAnalysis = async (imageInput, presetType = 'preset_random', imageMeta = null) => {
+    console.log('[BurnerVision] Starting analysis for imageInput:', typeof imageInput === 'string' ? imageInput.substring(0, 60) : imageInput);
+    console.log('[BurnerVision] Preset type:', presetType, '| Image meta:', imageMeta);
+
     setIsAnalyzing(true);
     setAnalysisStage(1); // V0.1 Image Quality
     setAnalysisProgress(15);
@@ -88,6 +110,10 @@ export function AppProvider({ children }) {
 
       await new Promise(r => setTimeout(r, 300));
 
+      console.log('[BurnerVision] Analysis result:', result);
+      console.log('[BurnerVision] Original image:', result?.original_image ? result.original_image.substring(0, 60) : 'none');
+      console.log('[BurnerVision] Navigating to report');
+
       // Save to history & set current report
       setHistory(prev => [result, ...prev]);
       setCurrentReport(result);
@@ -95,7 +121,7 @@ export function AppProvider({ children }) {
       setActiveTab('report');
       return result;
     } catch (err) {
-      console.error('Analysis failed:', err);
+      console.error('[BurnerVision] Analysis pipeline error:', err);
       setIsAnalyzing(false);
       throw err;
     }

@@ -6,63 +6,71 @@ import { GeometryDiagram } from '../components/visualization/GeometryDiagram';
 import { SurfaceSection } from '../components/inspection/SurfaceSection';
 import { DamageSection } from '../components/inspection/DamageSection';
 import { RecommendationPanel } from '../components/inspection/RecommendationPanel';
-import { ArrowLeft, ScanEye } from 'lucide-react';
+import { ErrorBoundary } from '../components/common/ErrorBoundary';
+import { ArrowLeft, ScanEye, AlertCircle } from 'lucide-react';
 
 export function ReportPage() {
   const { currentReport, setActiveTab } = useApp();
 
+  console.log('[BurnerVision] ReportPage rendering with currentReport:', currentReport ? currentReport.id : null);
+
   if (!currentReport) {
     return (
-      <div className="glass-card rounded-2xl p-12 text-center border border-slate-800 space-y-4 max-w-lg mx-auto">
-        <h3 className="text-lg font-bold text-slate-100">No Report Selected</h3>
-        <p className="text-xs text-slate-400">
-          Please upload a circular multi-ring burner photo or select a report from Inspection History.
+      <div className="glass-card rounded-2xl p-12 text-center border border-slate-800 space-y-4 max-w-lg mx-auto shadow-2xl">
+        <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto">
+          <AlertCircle className="w-6 h-6 animate-pulse" />
+        </div>
+        <h3 className="text-lg font-bold text-slate-100">No inspection result found</h3>
+        <p className="text-xs text-slate-400 leading-relaxed">
+          No inspection result found. Please return to New Inspection and run the analysis again.
         </p>
         <button
           onClick={() => setActiveTab('new-inspection')}
-          className="px-5 py-2.5 bg-amber-500 text-slate-950 font-bold text-xs rounded-xl shadow-lg hover:bg-amber-400 inline-flex items-center gap-2"
+          className="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg inline-flex items-center gap-2 transition-all transform hover:scale-[1.02]"
         >
           <ScanEye className="w-4 h-4" />
-          <span>Start New Inspection</span>
+          <span>Return to New Inspection</span>
         </button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
-      {/* Top Action Back Button */}
-      <div className="flex items-center justify-between">
-        <button
-          onClick={() => setActiveTab('dashboard')}
-          className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-semibold rounded-xl border border-slate-800 flex items-center gap-2 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back to Dashboard</span>
-        </button>
+    <ErrorBoundary onReset={() => setActiveTab('new-inspection')}>
+      <div className="space-y-6 max-w-6xl mx-auto">
+        {/* Top Action Back Button */}
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => setActiveTab('dashboard')}
+            className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-semibold rounded-xl border border-slate-800 flex items-center gap-2 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Dashboard</span>
+          </button>
 
-        <span className="text-xs font-mono text-slate-400">
-          CV Pipeline Output: <strong className="text-cyan-400">V0.4.1 Frozen</strong>
-        </span>
+          <span className="text-xs font-mono text-slate-400">
+            CV Pipeline Output: <strong className="text-cyan-400">V0.4.1 Frozen</strong>
+          </span>
+        </div>
+
+        {/* 1. Overall Status Header */}
+        <OverallStatusCard report={currentReport} />
+
+        {/* 2. Visual Overlay Viewer & Geometry Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <BurnerImageViewer report={currentReport} />
+          <GeometryDiagram geometry={currentReport.geometry} ports={currentReport.ports} />
+        </div>
+
+        {/* 3. Surface & Damage Analysis Cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <SurfaceSection report={currentReport} />
+          <DamageSection report={currentReport} />
+        </div>
+
+        {/* 4. Actionable Recommendations */}
+        <RecommendationPanel report={currentReport} />
       </div>
-
-      {/* 1. Overall Status Header */}
-      <OverallStatusCard report={currentReport} />
-
-      {/* 2. Visual Overlay Viewer & Geometry Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <BurnerImageViewer report={currentReport} />
-        <GeometryDiagram geometry={currentReport.geometry} ports={currentReport.ports} />
-      </div>
-
-      {/* 3. Surface & Damage Analysis Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <SurfaceSection report={currentReport} />
-        <DamageSection report={currentReport} />
-      </div>
-
-      {/* 4. Actionable Recommendations */}
-      <RecommendationPanel report={currentReport} />
-    </div>
+    </ErrorBoundary>
   );
 }
