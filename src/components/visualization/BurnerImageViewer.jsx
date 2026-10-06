@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { renderBurnerOverlayCanvas } from '../../services/canvasOverlay';
 import { MapLegend } from './MapLegend';
-import { Layers, Eye, ShieldAlert, Sparkles, Activity } from 'lucide-react';
+import { Layers, Eye, ShieldAlert, Sparkles, Activity, Camera, CheckCircle2 } from 'lucide-react';
 
 export function BurnerImageViewer({ report }) {
   const [activeOverlay, setActiveOverlay] = useState('annotated');
@@ -37,6 +37,15 @@ export function BurnerImageViewer({ report }) {
 
   if (!report) return null;
 
+  const isRealTestImage = report.image_meta?.source === 'real_test_image' || (typeof report.original_image === 'string' && (report.original_image.includes('/burner/good/') || report.original_image.includes('/burner/challenging/')));
+  const isLiveAnalysis = report.badge_label === 'LIVE CV ANALYSIS' || report.isDemoResult === false;
+
+  const badgeText = isLiveAnalysis
+    ? 'Live CV Analysis'
+    : isRealTestImage
+    ? 'Real Image / Simulated CV Result'
+    : 'Demo / Simulated CV Results';
+
   return (
     <div className="glass-card rounded-2xl p-5 border border-slate-800 space-y-4">
       {/* Overlay Tab Buttons */}
@@ -70,7 +79,7 @@ export function BurnerImageViewer({ report }) {
         </div>
       </div>
 
-      {/* Main Canvas Canvas Container */}
+      {/* Main Canvas Container */}
       <div className="relative w-full aspect-square max-w-[540px] mx-auto rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 shadow-2xl flex items-center justify-center">
         <canvas
           ref={canvasRef}
@@ -79,13 +88,23 @@ export function BurnerImageViewer({ report }) {
           className="w-full h-full object-contain"
         />
 
-        {/* Demo Mode Badge overlay on canvas */}
-        {report.isDemoResult && (
-          <div className="absolute top-3 left-3 bg-amber-500/20 backdrop-blur-md text-amber-300 border border-amber-500/40 text-[11px] font-mono px-2.5 py-1 rounded-md flex items-center gap-1.5 shadow-lg">
+        {/* Dynamic Mode Badge overlay on canvas */}
+        <div className={`absolute top-3 left-3 backdrop-blur-md border text-[11px] font-mono px-2.5 py-1 rounded-md flex items-center gap-1.5 shadow-lg ${
+          isLiveAnalysis
+            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+            : isRealTestImage
+            ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
+            : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+        }`}>
+          {isLiveAnalysis ? (
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+          ) : isRealTestImage ? (
+            <Camera className="w-3.5 h-3.5 text-cyan-400" />
+          ) : (
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span>Demo / Simulated CV Results</span>
-          </div>
-        )}
+          )}
+          <span>{badgeText}</span>
+        </div>
 
         {/* Active Overlay Watermark */}
         <div className="absolute bottom-3 right-3 bg-slate-900/80 backdrop-blur-md text-slate-300 border border-slate-800 text-[11px] font-mono px-2.5 py-1 rounded-md">

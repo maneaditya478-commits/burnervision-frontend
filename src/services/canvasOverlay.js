@@ -12,11 +12,28 @@ export function renderBurnerOverlayCanvas(canvas, imageObj, activeTab, report) {
   const width = canvas.width;
   const height = canvas.height;
 
-  // Clear canvas
-  ctx.clearRect(0, 0, width, height);
+  // Clear canvas with dark background
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, width, height);
 
-  // Draw background image
-  ctx.drawImage(imageObj, 0, 0, width, height);
+  // Draw background image fitted with aspect ratio preservation
+  const imgAspect = (imageObj.width && imageObj.height) ? (imageObj.width / imageObj.height) : 1;
+  let drawW = width;
+  let drawH = height;
+  let offsetX = 0;
+  let offsetY = 0;
+
+  if (imgAspect > 1) {
+    // Landscape
+    drawH = width / imgAspect;
+    offsetY = (height - drawH) / 2;
+  } else if (imgAspect < 1) {
+    // Portrait (e.g. 3024x4032)
+    drawW = height * imgAspect;
+    offsetX = (width - drawW) / 2;
+  }
+
+  ctx.drawImage(imageObj, offsetX, offsetY, drawW, drawH);
 
   if (activeTab === 'original') {
     return; // Plain original image
@@ -56,7 +73,7 @@ export function renderBurnerOverlayCanvas(canvas, imageObj, activeTab, report) {
 
     // Detected Ports (White = Normal, Orange = Obstructed)
     const ringRadii = [outerR, middleR, innerR];
-    const isCleaningOrDamaged = report.overall_damage_status !== 'NORMAL';
+    const isCleaningOrDamaged = report.overall_damage_status === 'CLEANING REQUIRED' || report.overall_damage_status === 'INSPECTION NEEDED';
 
     ringRadii.forEach((r, idx) => {
       const count = (idx + 1) * 24;

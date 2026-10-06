@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, AlertTriangle, ShieldAlert, Sparkles, Clock, Calendar, Download, Printer } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, ShieldAlert, Sparkles, Clock, Calendar, Download, Printer, Flame, Camera } from 'lucide-react';
 
 export function OverallStatusCard({ report }) {
   if (!report) return null;
@@ -49,6 +49,16 @@ export function OverallStatusCard({ report }) {
     URL.revokeObjectURL(url);
   };
 
+  // Determine the exact badge type
+  const isRealTestImage = report.image_meta?.source === 'real_test_image' || (typeof report.original_image === 'string' && (report.original_image.includes('/burner/good/') || report.original_image.includes('/burner/challenging/')));
+  const isLiveAnalysis = report.badge_label === 'LIVE CV ANALYSIS' || report.isDemoResult === false;
+  
+  const badgeLabel = isLiveAnalysis
+    ? 'LIVE CV ANALYSIS'
+    : isRealTestImage
+    ? 'REAL IMAGE / SIMULATED CV RESULT'
+    : 'DEMO / SIMULATED';
+
   return (
     <div className={`glass-card rounded-2xl p-6 border ${currentStatus.borderClass} bg-gradient-to-br ${currentStatus.gradientClass} space-y-4 shadow-2xl`}>
       {/* Top Banner Row */}
@@ -59,19 +69,39 @@ export function OverallStatusCard({ report }) {
           </div>
 
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className={`px-3 py-1 rounded-full font-extrabold text-xs tracking-wider border uppercase ${currentStatus.badgeClass}`}>
                 {report.overall_damage_status}
               </span>
 
-              {report.isDemoResult && (
-                <span className="px-2.5 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30 text-[11px] font-mono flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-amber-400" />
-                  <span>Demo / Simulated CV Results</span>
+              {/* Assessment Mode Badge */}
+              <span
+                className={`px-2.5 py-0.5 rounded text-[11px] font-mono font-bold border flex items-center gap-1.5 ${
+                  isLiveAnalysis
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                    : isRealTestImage
+                    ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
+                    : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                }`}
+              >
+                {isLiveAnalysis ? (
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                ) : isRealTestImage ? (
+                  <Camera className="w-3.5 h-3.5 text-cyan-400" />
+                ) : (
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                )}
+                <span>{badgeLabel}</span>
+              </span>
+
+              {isRealTestImage && report.image_meta?.filename && (
+                <span className="text-[10px] font-mono text-slate-400 bg-slate-950/80 px-2 py-0.5 rounded border border-slate-800">
+                  {report.image_meta.filename}
                 </span>
               )}
             </div>
-            <h2 className="text-xl font-bold text-slate-100 mt-1">
+
+            <h2 className="text-xl font-bold text-slate-100 mt-1.5">
               {currentStatus.title}
             </h2>
           </div>

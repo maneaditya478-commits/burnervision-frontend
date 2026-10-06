@@ -48,11 +48,12 @@ export async function checkBackendHealth(customUrl = API_BASE_URL) {
  * @param {string|File} imageInput 
  * @param {boolean} isDemoMode 
  * @param {string} presetType 
+ * @param {object|null} imageMeta
  */
-export async function analyzeBurnerImage(imageInput, isDemoMode = true, presetType = 'preset_random') {
+export async function analyzeBurnerImage(imageInput, isDemoMode = true, presetType = 'preset_random', imageMeta = null) {
   let imageBase64 = '';
 
-  // Handle File object or base64 string
+  // Handle File object or base64 string or public URL string
   if (imageInput instanceof File) {
     imageBase64 = await new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -68,7 +69,7 @@ export async function analyzeBurnerImage(imageInput, isDemoMode = true, presetTy
   if (isDemoMode) {
     // Artificial 1.2s delay to simulate real CV processing
     await new Promise(r => setTimeout(r, 1200));
-    return generateMockAnalysisResult(imageBase64, presetType);
+    return generateMockAnalysisResult(imageBase64, presetType, imageMeta);
   }
 
   // Call Live FastAPI backend
@@ -89,12 +90,13 @@ export async function analyzeBurnerImage(imageInput, isDemoMode = true, presetTy
     return {
       ...result,
       isDemoResult: false,
+      badge_label: 'LIVE CV ANALYSIS',
       disclaimer: 'Visual inspection aid — not a safety certification'
     };
   } catch (error) {
     console.warn('Backend API request failed. Falling back to Demo Mode:', error.message);
     // Fallback gracefully to demo result with indicator
-    const fallbackResult = generateMockAnalysisResult(imageBase64, presetType);
+    const fallbackResult = generateMockAnalysisResult(imageBase64, presetType, imageMeta);
     fallbackResult.demoLabel = 'Demo / Simulated CV Results (API Fallback)';
     return fallbackResult;
   }

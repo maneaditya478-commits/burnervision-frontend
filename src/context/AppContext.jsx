@@ -58,7 +58,7 @@ export function AppProvider({ children }) {
   }, [apiBaseUrl]);
 
   // Run analysis pipeline flow
-  const runAnalysis = async (imageInput, presetType = 'preset_random') => {
+  const runAnalysis = async (imageInput, presetType = 'preset_random', imageMeta = null) => {
     setIsAnalyzing(true);
     setAnalysisStage(1); // V0.1 Image Quality
     setAnalysisProgress(15);
@@ -80,7 +80,7 @@ export function AppProvider({ children }) {
       setAnalysisProgress(85);
 
       // Stage 4: V0.4.1 Damage Analysis
-      const result = await analyzeBurnerImage(imageInput, isDemoMode, presetType);
+      const result = await analyzeBurnerImage(imageInput, isDemoMode, presetType, imageMeta);
 
       await new Promise(r => setTimeout(r, 500));
       setAnalysisStage(5); // Synthesis & Report
