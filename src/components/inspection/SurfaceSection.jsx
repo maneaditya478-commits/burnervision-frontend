@@ -1,7 +1,7 @@
-import React from 'react';
-import { Sparkles, ShieldAlert, AlertCircle, Info } from 'lucide-react';
+import { Sparkles, ShieldAlert, AlertCircle, Info, ExternalLink } from 'lucide-react';
+import { REFERENCE_CATEGORIES } from '../../data/defectReferenceLibrary';
 
-export function SurfaceSection({ report }) {
+export function SurfaceSection({ report, onOpenCategory }) {
   if (!report) return null;
 
   const dirt = report.dirt || {};
@@ -9,18 +9,32 @@ export function SurfaceSection({ report }) {
   const discoloration = report.discoloration || {};
   const surfaceAnomaly = report.surface_anomaly || {};
 
+  const surfaceRefCat = REFERENCE_CATEGORIES.find(c => c.id === 'surface');
+
   return (
     <div className="glass-card rounded-2xl p-5 border border-slate-800 space-y-4">
       <div className="flex items-center justify-between border-b border-slate-800 pb-3">
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-amber-400" />
           <h3 className="font-bold text-slate-100 text-sm tracking-wide">
-            Surface Deposit & Oxidation Analysis (V0.3)
+            Section 4: Surface Condition (V0.3)
           </h3>
         </div>
-        <span className="text-xs font-mono text-slate-400">
-          Assessable Surface Area: <strong className="text-slate-200">96.8%</strong>
-        </span>
+        <div className="flex items-center gap-3">
+          {surfaceRefCat && onOpenCategory && (
+            <button
+              type="button"
+              onClick={() => onOpenCategory(surfaceRefCat)}
+              className="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1 font-semibold"
+            >
+              <span>Ref: Category E</span>
+              <ExternalLink className="w-3 h-3" />
+            </button>
+          )}
+          <span className="text-xs font-mono text-slate-400">
+            Assessable Area: <strong className="text-slate-200">96.8%</strong>
+          </span>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

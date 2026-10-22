@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, AlertTriangle, ShieldAlert, Sparkles, Clock, Calendar, Download, Printer, Flame, Camera } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, ShieldAlert, Sparkles, Clock, Calendar, Download, Printer, Camera } from 'lucide-react';
 
 export function OverallStatusCard({ report }) {
   if (!report) return null;
@@ -69,6 +69,9 @@ export function OverallStatusCard({ report }) {
           </div>
 
           <div>
+            <span className="text-[10px] font-mono font-bold text-slate-400 block uppercase tracking-wider mb-0.5">
+              Section 6: Overall Assessment
+            </span>
             <div className="flex flex-wrap items-center gap-2">
               <span className={`px-3 py-1 rounded-full font-extrabold text-xs tracking-wider border uppercase ${currentStatus.badgeClass}`}>
                 {report.overall_damage_status}

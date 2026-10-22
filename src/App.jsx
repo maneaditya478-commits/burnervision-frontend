@@ -12,6 +12,7 @@ import { HistoryPage } from './pages/HistoryPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { SystemStatusPage } from './pages/SystemStatusPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { ReferenceLibraryPage } from './pages/ReferenceLibraryPage';
 
 function MainLayout() {
   const { activeTab, setActiveTab } = useApp();
@@ -24,6 +25,8 @@ function MainLayout() {
         return <NewInspectionPage />;
       case 'report':
         return <ReportPage />;
+      case 'reference-library':
+        return <ReferenceLibraryPage />;
       case 'history':
         return <HistoryPage />;
       case 'analytics':

@@ -9,7 +9,8 @@ import {
   ArrowRight,
   Sparkles,
   Flame,
-  BarChart3
+  BarChart3,
+  BookOpen
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
@@ -69,6 +70,14 @@ export function DashboardPage() {
               className="px-4 py-3 bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition-colors"
             >
               View Inspection History ({total})
+            </button>
+
+            <button
+              onClick={() => setActiveTab('reference-library')}
+              className="px-4 py-3 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-semibold rounded-xl border border-amber-500/40 transition-colors flex items-center gap-1.5"
+            >
+              <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+              <span>Defect Reference Library</span>
             </button>
           </div>
         </div>

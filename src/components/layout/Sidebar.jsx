@@ -11,16 +11,18 @@ import {
   ChevronRight,
   Flame,
   ShieldAlert,
-  Cpu
+  Cpu,
+  BookOpen
 } from 'lucide-react';
 
 export function Sidebar() {
-  const { activeTab, setActiveTab, backendHealth } = useApp();
+  const { activeTab, setActiveTab } = useApp();
   const [collapsed, setCollapsed] = useState(false);
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'new-inspection', label: 'New Inspection', icon: ScanEye, badge: 'V0.4.1' },
+    { id: 'reference-library', label: 'Reference Library', icon: BookOpen, badge: '5 Types' },
     { id: 'history', label: 'Inspection History', icon: History },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'system-status', label: 'System Status', icon: Activity },

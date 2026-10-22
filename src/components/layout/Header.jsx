@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
-import { Sun, Moon, Wifi, WifiOff, Sparkles, User, ShieldCheck } from 'lucide-react';
+import { Sun, Moon, Wifi, WifiOff, Sparkles, ShieldCheck } from 'lucide-react';
 
 export function Header() {
   const { activeTab, isDarkMode, setIsDarkMode, isDemoMode, setIsDemoMode, backendHealth } = useApp();
@@ -9,6 +9,7 @@ export function Header() {
     dashboard: { title: 'Burner Condition Dashboard', subtitle: 'Inspect. Analyze. Understand.' },
     'new-inspection': { title: 'New Visual Inspection', subtitle: 'Single-image circular multi-ring cast-iron burner condition assessment' },
     report: { title: 'Inspection Report', subtitle: 'Detailed multi-layer visual analysis & condition diagnostics' },
+    'reference-library': { title: 'Burner Defect Reference Library', subtitle: 'Comparative visual reference standards for circular multi-ring gas burners' },
     history: { title: 'Inspection History', subtitle: 'Historical record of circular gas burner condition reports' },
     analytics: { title: 'Condition Analytics', subtitle: 'Aggregate trends for surface deposits, corrosion, and damage' },
     'system-status': { title: 'System Status & Telemetry', subtitle: 'V0.1–V0.4.1 Classical CV Foundation pipeline diagnostics' },

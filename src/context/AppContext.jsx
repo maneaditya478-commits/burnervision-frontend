@@ -27,6 +27,7 @@ export function AppProvider({ children }) {
   });
 
   const [currentReport, setCurrentReport] = useState(null);
+  const [inspectionScope, setInspectionScope] = useState('full');
   
   // Pipeline execution state
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -153,6 +154,8 @@ export function AppProvider({ children }) {
         history,
         currentReport,
         setCurrentReport,
+        inspectionScope,
+        setInspectionScope,
         isAnalyzing,
         analysisStage,
         analysisProgress,

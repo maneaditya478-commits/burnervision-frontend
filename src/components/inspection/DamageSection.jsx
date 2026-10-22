@@ -1,7 +1,8 @@
 import React from 'react';
-import { ShieldAlert, AlertTriangle, CheckCircle2, Activity, Info } from 'lucide-react';
+import { ShieldAlert, AlertTriangle, CheckCircle2, Activity, Info, ExternalLink } from 'lucide-react';
+import { REFERENCE_CATEGORIES } from '../../data/defectReferenceLibrary';
 
-export function DamageSection({ report }) {
+export function DamageSection({ report, onOpenCategory }) {
   if (!report) return null;
 
   const crack = report.crack_evidence || {};
@@ -11,6 +12,8 @@ export function DamageSection({ report }) {
   const perspective = report.perspective || {};
 
   const isDamaged = report.overall_damage_status === 'INSPECTION NEEDED';
+  const crackRefCat = REFERENCE_CATEGORIES.find(c => c.id === 'cracks');
+  const deformRefCat = REFERENCE_CATEGORIES.find(c => c.id === 'deformation');
 
   return (
     <div className="glass-card rounded-2xl p-5 border border-slate-800 space-y-4">
@@ -18,12 +21,24 @@ export function DamageSection({ report }) {
         <div className="flex items-center gap-2">
           <ShieldAlert className="w-5 h-5 text-rose-400" />
           <h3 className="font-bold text-slate-100 text-sm tracking-wide">
-            Damage & Discontinuity Analysis (V0.4.1)
+            Section 5: Damage and Deformation (V0.4.1)
           </h3>
         </div>
-        <span className="text-xs font-mono px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
-          Conservative Visual Metrics
-        </span>
+        <div className="flex items-center gap-2">
+          {crackRefCat && onOpenCategory && (
+            <button
+              type="button"
+              onClick={() => onOpenCategory(crackRefCat)}
+              className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1 font-semibold"
+            >
+              <span>Ref: Cat C / D</span>
+              <ExternalLink className="w-3 h-3" />
+            </button>
+          )}
+          <span className="text-xs font-mono px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
+            Conservative Visual Metrics
+          </span>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
