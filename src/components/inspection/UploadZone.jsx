@@ -16,100 +16,33 @@ import {
   AlertTriangle,
   RotateCcw,
   Check,
-  Loader2
+  BookOpen
 } from 'lucide-react';
 
 export function UploadZone() {
-  const { runAnalysis, isDemoMode, inspectionScope, setInspectionScope } = useApp();
+  const { runAnalysis, isDemoMode, inspectionScope, setInspectionScope, setActiveTab } = useApp();
   const [selectedImage, setSelectedImage] = useState(null);
   const [presetType, setPresetType] = useState('normal');
   const [imageMeta, setImageMeta] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
-  const [isConverting, setIsConverting] = useState(false);
-  const [convertMessage, setConvertMessage] = useState('');
-  const [imageError, setImageError] = useState(null);
-  const [isImageLoading, setIsImageLoading] = useState(false);
 
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
 
-  const processImageFile = async (file) => {
-    if (!file) return;
-
-    setImageError(null);
-    setIsImageLoading(true);
-
-    const isHeic =
-      file.name?.toLowerCase().endsWith('.heic') ||
-      file.name?.toLowerCase().endsWith('.heif') ||
-      file.type === 'image/heic' ||
-      file.type === 'image/heif';
-
-    if (isHeic) {
-      setIsConverting(true);
-      setConvertMessage('Converting HEIC image to high-resolution JPEG...');
-      try {
-        const heic2anyModule = await import('heic2any');
-        const heic2any = heic2anyModule.default || heic2anyModule;
-        const convertedBlob = await heic2any({
-          blob: file,
-          toType: 'image/jpeg',
-          quality: 0.92,
-        });
-        const finalBlob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
-
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          setSelectedImage(event.target.result);
-          setImageMeta({
-            source: 'user_upload',
-            filename: file.name,
-            convertedFromHeic: true,
-            demo: isDemoMode,
-          });
-          setIsConverting(false);
-          setConvertMessage('');
-          setIsImageLoading(false);
-        };
-        reader.onerror = () => {
-          setIsConverting(false);
-          setConvertMessage('');
-          setIsImageLoading(false);
-          setImageError('Failed to read the converted HEIC image.');
-        };
-        reader.readAsDataURL(finalBlob);
-      } catch (err) {
-        console.error('HEIC conversion failed:', err);
-        setIsConverting(false);
-        setConvertMessage('');
-        setIsImageLoading(false);
-        setImageError('Unable to convert HEIC image. Please upload a standard JPG, PNG, or WEBP photo.');
-      }
-      return;
-    }
-
-    // Standard format reading (JPG, PNG, WEBP)
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setSelectedImage(event.target.result);
-      setImageMeta({
-        source: 'user_upload',
-        filename: file.name,
-        demo: isDemoMode,
-      });
-    };
-    reader.onerror = () => {
-      setIsImageLoading(false);
-      setImageError('Failed to read file. Please select a valid image.');
-    };
-    reader.readAsDataURL(file);
-  };
-
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      processImageFile(file);
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setSelectedImage(event.target.result);
+        setImageMeta({
+          source: 'user_upload',
+          filename: file.name,
+          demo: isDemoMode
+        });
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -118,15 +51,21 @@ export function UploadZone() {
     setIsDragOver(false);
     const file = e.dataTransfer.files?.[0];
     if (file) {
-      processImageFile(file);
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setSelectedImage(event.target.result);
+        setImageMeta({
+          source: 'user_upload',
+          filename: file.name,
+          demo: isDemoMode
+        });
+      };
+      reader.readAsDataURL(file);
     }
   };
 
   // Load procedural canvas simulation preset
   const loadSimulatedPreset = (type) => {
-    setImageError(null);
-    setIsImageLoading(false);
-    setIsConverting(false);
     setPresetType(type);
     setImageMeta({
       source: 'simulated_preset',
@@ -162,9 +101,6 @@ export function UploadZone() {
       const stream = videoRef.current.srcObject;
       stream.getTracks().forEach(track => track.stop());
       setIsCameraActive(false);
-      setImageError(null);
-      setIsImageLoading(false);
-      setIsConverting(false);
       setImageMeta({
         source: 'camera_capture',
         filename: 'camera_frame.jpg',
@@ -186,13 +122,43 @@ export function UploadZone() {
   };
 
   const handleStartAnalysis = () => {
-    if (selectedImage && !imageError && !isConverting) {
+    if (selectedImage) {
       runAnalysis(selectedImage, presetType, imageMeta);
     }
   };
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
+      {/* Visual Reference Library Quick Banner */}
+      <div className="glass-card rounded-2xl p-4 border border-amber-500/30 bg-gradient-to-r from-amber-950/30 via-slate-900 to-slate-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
+            <BookOpen className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h4 className="text-xs font-bold text-slate-100 uppercase tracking-wider">
+                Burner Defect Reference Library
+              </h4>
+              <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                5 Defect Standards
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              Review official comparative visual standards: Chipping, Missing/Blocked Ports, Cracks, Deformation, and Oxidation.
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('reference-library')}
+          className="px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 shrink-0"
+        >
+          <span>Browse Reference Library</span>
+        </button>
+      </div>
+
       {/* 1. SIMULATED PRESETS SECTION */}
       <div className="glass-card rounded-2xl p-4 border border-slate-800 space-y-2.5">
         <div className="flex items-center justify-between">
@@ -287,22 +253,6 @@ export function UploadZone() {
               </button>
             </div>
           </div>
-        ) : isConverting ? (
-          /* Converting HEIC or processing state */
-          <div className="relative w-full max-w-md mx-auto aspect-square rounded-2xl overflow-hidden bg-slate-900 border border-amber-500/30 shadow-2xl flex flex-col items-center justify-center p-6 text-center space-y-4">
-            <div className="p-4 bg-amber-500/10 rounded-2xl border border-amber-500/30 text-amber-400">
-              <Loader2 className="w-8 h-8 animate-spin" />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-slate-100">Converting Image Format</h4>
-              <p className="text-xs text-amber-300 font-mono mt-1">
-                {convertMessage || 'Processing burner photograph...'}
-              </p>
-            </div>
-            <p className="text-[11px] text-slate-400 max-w-xs">
-              Converting high-efficiency HEIC capture into browser-ready RGB format for computer vision analysis.
-            </p>
-          </div>
         ) : !selectedImage ? (
           <div
             onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
@@ -332,7 +282,7 @@ export function UploadZone() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif,.jpg,.jpeg,.png,.webp"
+                accept="image/jpeg,image/png,image/webp"
                 onChange={handleFileChange}
                 className="hidden"
               />
@@ -355,75 +305,41 @@ export function UploadZone() {
             </div>
 
             <span className="text-[11px] font-mono text-slate-500">
-              Supported Formats: JPG, PNG, WEBP, HEIC (Up to 25 MB)
+              Supported Formats: JPG, PNG, WEBP (Up to 15 MB)
             </span>
           </div>
         ) : (
           /* Image Preview & Action Controls */
           <div className="space-y-4">
             <div className="relative w-full max-w-md mx-auto aspect-square rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 shadow-2xl group flex items-center justify-center">
-              {imageError ? (
-                <div className="flex flex-col items-center justify-center p-6 text-center space-y-3">
-                  <div className="p-3 bg-rose-500/10 rounded-2xl border border-rose-500/30 text-rose-400">
-                    <AlertTriangle className="w-8 h-8" />
-                  </div>
-                  <h4 className="text-sm font-bold text-slate-100">Image Preview Unavailable</h4>
-                  <p className="text-xs text-rose-300 max-w-xs leading-relaxed">{imageError}</p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedImage(null);
-                      setImageMeta(null);
-                      setImageError(null);
-                    }}
-                    className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 transition-colors"
-                  >
-                    Select Another Image
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <img
-                    src={selectedImage}
-                    alt="Selected Burner Preview"
-                    className="w-full h-full object-contain"
-                    onLoad={() => setIsImageLoading(false)}
-                    onError={() => {
-                      setIsImageLoading(false);
-                      setImageError('The browser could not decode this image file. Please use a standard JPG, PNG, or WEBP photo.');
-                    }}
-                  />
-                  {isImageLoading && (
-                    <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center z-10">
-                      <Loader2 className="w-7 h-7 text-amber-400 animate-spin" />
-                    </div>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedImage(null);
-                      setImageMeta(null);
-                      setImageError(null);
-                    }}
-                    className="absolute top-3 right-3 p-2 bg-slate-900/90 hover:bg-rose-600 text-slate-200 rounded-xl border border-slate-700 transition-colors shadow-lg z-10"
-                    title="Remove image"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+              <img
+                src={selectedImage}
+                alt="Selected Burner Preview"
+                className="w-full h-full object-contain"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedImage(null);
+                  setImageMeta(null);
+                }}
+                className="absolute top-3 right-3 p-2 bg-slate-900/90 hover:bg-rose-600 text-slate-200 rounded-xl border border-slate-700 transition-colors shadow-lg z-10"
+                title="Remove image"
+              >
+                <X className="w-4 h-4" />
+              </button>
 
-                  {/* Preview Source Tag */}
-                  <div className="absolute bottom-3 left-3 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-lg text-xs font-mono border border-slate-800 flex items-center gap-2">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                    <span className="text-amber-300">
-                      {imageMeta?.source === 'user_upload'
-                        ? `User Upload: ${imageMeta.filename}${imageMeta.convertedFromHeic ? ' (HEIC Converted)' : ''}`
-                        : imageMeta?.source === 'camera_capture'
-                        ? 'Live Camera Capture'
-                        : 'Procedural Simulation Preset'}
-                    </span>
-                  </div>
-                </>
-              )}
+              {/* Preview Source Tag */}
+              <div className="absolute bottom-3 left-3 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-lg text-xs font-mono border border-slate-800 flex items-center gap-2">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span className="text-amber-300">
+                  {imageMeta?.source === 'user_upload'
+                    ? `User Upload: ${imageMeta.filename}`
+                    : imageMeta?.source === 'camera_capture'
+                    ? 'Live Camera Capture'
+                    : 'Procedural Simulation Preset'}
+                </span>
+              </div>
             </div>
 
             {/* Step 3: Optional Inspection Scope Selector */}
@@ -438,7 +354,6 @@ export function UploadZone() {
                 onClick={() => {
                   setSelectedImage(null);
                   setImageMeta(null);
-                  setImageError(null);
                 }}
                 className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl border border-slate-700 flex items-center gap-2"
               >
@@ -448,15 +363,10 @@ export function UploadZone() {
 
               <button
                 type="button"
-                disabled={!selectedImage || Boolean(imageError) || isConverting}
                 onClick={handleStartAnalysis}
-                className={`px-6 py-2.5 font-bold text-sm rounded-xl shadow-lg flex items-center gap-2 transition-all transform ${
-                  !selectedImage || Boolean(imageError) || isConverting
-                    ? 'bg-slate-800 text-slate-500 cursor-not-allowed shadow-none'
-                    : 'bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-400 text-slate-950 shadow-amber-500/25 hover:scale-[1.02]'
-                }`}
+                className="px-6 py-2.5 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-sm rounded-xl shadow-lg shadow-amber-500/25 flex items-center gap-2 transition-all transform hover:scale-[1.02]"
               >
-                <Play className={`w-4 h-4 ${!selectedImage || Boolean(imageError) || isConverting ? 'fill-slate-500' : 'fill-slate-950'}`} />
+                <Play className="w-4 h-4 fill-slate-950" />
                 <span>Analyze Burner (V0.1–V0.4.1)</span>
               </button>
             </div>

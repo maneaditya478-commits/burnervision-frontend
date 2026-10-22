@@ -2,6 +2,7 @@ import React from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { Sidebar } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
+import { DisclaimerBanner } from './components/layout/DisclaimerBanner';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 
 import { DashboardPage } from './pages/DashboardPage';
@@ -48,6 +49,9 @@ function MainLayout() {
       <div className="flex-1 flex flex-col h-full overflow-hidden">
         {/* Top Header */}
         <Header />
+
+        {/* Safety Disclaimer Banner */}
+        <DisclaimerBanner />
 
         {/* Scrollable Page Body */}
         <main className="flex-1 overflow-y-auto p-6 space-y-6">
