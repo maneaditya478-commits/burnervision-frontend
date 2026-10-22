@@ -16,7 +16,6 @@ import {
   AlertTriangle,
   RotateCcw,
   Check,
-  Flame,
   BookOpen
 } from 'lucide-react';
 
@@ -25,7 +24,6 @@ export function UploadZone() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [presetType, setPresetType] = useState('normal');
   const [imageMeta, setImageMeta] = useState(null);
-  const [selectedRealImage, setSelectedRealImage] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
 
@@ -38,7 +36,6 @@ export function UploadZone() {
       const reader = new FileReader();
       reader.onload = (event) => {
         setSelectedImage(event.target.result);
-        setSelectedRealImage(null);
         setImageMeta({
           source: 'user_upload',
           filename: file.name,
@@ -57,7 +54,6 @@ export function UploadZone() {
       const reader = new FileReader();
       reader.onload = (event) => {
         setSelectedImage(event.target.result);
-        setSelectedRealImage(null);
         setImageMeta({
           source: 'user_upload',
           filename: file.name,
@@ -71,7 +67,6 @@ export function UploadZone() {
   // Load procedural canvas simulation preset
   const loadSimulatedPreset = (type) => {
     setPresetType(type);
-    setSelectedRealImage(null);
     setImageMeta({
       source: 'simulated_preset',
       test_category: type,
@@ -106,7 +101,6 @@ export function UploadZone() {
       const stream = videoRef.current.srcObject;
       stream.getTracks().forEach(track => track.stop());
       setIsCameraActive(false);
-      setSelectedRealImage(null);
       setImageMeta({
         source: 'camera_capture',
         filename: 'camera_frame.jpg',
@@ -184,7 +178,7 @@ export function UploadZone() {
             type="button"
             onClick={() => loadSimulatedPreset('normal')}
             className={`p-2.5 rounded-xl text-xs font-semibold border transition-all flex items-center justify-between ${
-              presetType === 'normal' && !selectedRealImage && selectedImage
+              presetType === 'normal' && selectedImage && imageMeta?.source === 'simulated_preset'
                 ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-md shadow-emerald-950/40'
                 : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:bg-slate-800/80 hover:text-slate-100'
             }`}
@@ -193,7 +187,7 @@ export function UploadZone() {
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
               <span>Normal Burner</span>
             </div>
-            {presetType === 'normal' && !selectedRealImage && selectedImage && (
+            {presetType === 'normal' && selectedImage && imageMeta?.source === 'simulated_preset' && (
               <Check className="w-3.5 h-3.5 text-emerald-400" />
             )}
           </button>
@@ -202,7 +196,7 @@ export function UploadZone() {
             type="button"
             onClick={() => loadSimulatedPreset('cleaning')}
             className={`p-2.5 rounded-xl text-xs font-semibold border transition-all flex items-center justify-between ${
-              presetType === 'cleaning' && !selectedRealImage && selectedImage
+              presetType === 'cleaning' && selectedImage && imageMeta?.source === 'simulated_preset'
                 ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-md shadow-amber-950/40'
                 : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:bg-slate-800/80 hover:text-slate-100'
             }`}
@@ -211,7 +205,7 @@ export function UploadZone() {
               <Sparkles className="w-4 h-4 text-amber-400" />
               <span>Surface Dirt & Deposit</span>
             </div>
-            {presetType === 'cleaning' && !selectedRealImage && selectedImage && (
+            {presetType === 'cleaning' && selectedImage && imageMeta?.source === 'simulated_preset' && (
               <Check className="w-3.5 h-3.5 text-amber-400" />
             )}
           </button>
@@ -220,7 +214,7 @@ export function UploadZone() {
             type="button"
             onClick={() => loadSimulatedPreset('inspection')}
             className={`p-2.5 rounded-xl text-xs font-semibold border transition-all flex items-center justify-between ${
-              presetType === 'inspection' && !selectedRealImage && selectedImage
+              presetType === 'inspection' && selectedImage && imageMeta?.source === 'simulated_preset'
                 ? 'bg-rose-500/20 text-rose-300 border-rose-500/50 shadow-md shadow-rose-950/40'
                 : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:bg-slate-800/80 hover:text-slate-100'
             }`}
@@ -229,7 +223,7 @@ export function UploadZone() {
               <AlertTriangle className="w-4 h-4 text-rose-400" />
               <span>Possible Crack & Rust</span>
             </div>
-            {presetType === 'inspection' && !selectedRealImage && selectedImage && (
+            {presetType === 'inspection' && selectedImage && imageMeta?.source === 'simulated_preset' && (
               <Check className="w-3.5 h-3.5 text-rose-400" />
             )}
           </button>
@@ -327,7 +321,6 @@ export function UploadZone() {
                 type="button"
                 onClick={() => {
                   setSelectedImage(null);
-                  setSelectedRealImage(null);
                   setImageMeta(null);
                 }}
                 className="absolute top-3 right-3 p-2 bg-slate-900/90 hover:bg-rose-600 text-slate-200 rounded-xl border border-slate-700 transition-colors shadow-lg z-10"
@@ -338,26 +331,14 @@ export function UploadZone() {
 
               {/* Preview Source Tag */}
               <div className="absolute bottom-3 left-3 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-lg text-xs font-mono border border-slate-800 flex items-center gap-2">
-                {selectedRealImage ? (
-                  <>
-                    <Flame className="w-3.5 h-3.5 text-cyan-400" />
-                    <span className="text-slate-300">
-                      Real Test Image: <strong className="text-cyan-300">{imageMeta?.filename}</strong>
-                    </span>
-                    <span className={`text-[10px] px-1.5 py-0.2 rounded font-semibold ${
-                      imageMeta?.test_category === 'good' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-cyan-500/20 text-cyan-300'
-                    }`}>
-                      {imageMeta?.test_category === 'good' ? 'Good Reference' : 'Robustness Test'}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                    <span className="text-amber-300">
-                      {imageMeta?.source === 'user_upload' ? `User Upload: ${imageMeta.filename}` : 'Procedural Simulation Preset'}
-                    </span>
-                  </>
-                )}
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span className="text-amber-300">
+                  {imageMeta?.source === 'user_upload'
+                    ? `User Upload: ${imageMeta.filename}`
+                    : imageMeta?.source === 'camera_capture'
+                    ? 'Live Camera Capture'
+                    : 'Procedural Simulation Preset'}
+                </span>
               </div>
             </div>
 
@@ -372,7 +353,6 @@ export function UploadZone() {
                 type="button"
                 onClick={() => {
                   setSelectedImage(null);
-                  setSelectedRealImage(null);
                   setImageMeta(null);
                 }}
                 className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl border border-slate-700 flex items-center gap-2"
