@@ -1,11 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import {
-  generateSampleBurnerImage,
-  GOOD_BURNER_IMAGES,
-  CHALLENGING_BURNER_IMAGES
+  generateSampleBurnerImage
 } from '../../services/mockData';
 import { PhotoGuideCard } from './PhotoGuideCard';
+import { InspectionScopeSelector } from './InspectionScopeSelector';
 import {
   Upload,
   Camera,
@@ -18,19 +17,17 @@ import {
   RotateCcw,
   Check,
   Flame,
-  Layers,
-  AlertCircle
+  BookOpen
 } from 'lucide-react';
 
 export function UploadZone() {
-  const { runAnalysis, isDemoMode } = useApp();
+  const { runAnalysis, isDemoMode, inspectionScope, setInspectionScope, setActiveTab } = useApp();
   const [selectedImage, setSelectedImage] = useState(null);
   const [presetType, setPresetType] = useState('normal');
   const [imageMeta, setImageMeta] = useState(null);
   const [selectedRealImage, setSelectedRealImage] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
-  const [imageLoadErrors, setImageLoadErrors] = useState({});
 
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
@@ -82,24 +79,6 @@ export function UploadZone() {
     });
     const sampleUrl = generateSampleBurnerImage(type);
     setSelectedImage(sampleUrl);
-  };
-
-  // Load real photograph test image
-  const loadRealTestImage = (imgPath, category) => {
-    const filename = imgPath.split('/').pop() || 'image.jpg';
-    setSelectedRealImage(imgPath);
-    setPresetType(category === 'good' ? 'normal' : 'challenging');
-    setImageMeta({
-      source: 'real_test_image',
-      test_category: category,
-      filename: filename,
-      demo: true
-    });
-    setSelectedImage(imgPath);
-  };
-
-  const handleImageError = (imgPath) => {
-    setImageLoadErrors(prev => ({ ...prev, [imgPath]: true }));
   };
 
   const startCamera = async () => {
@@ -156,6 +135,36 @@ export function UploadZone() {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
+      {/* Visual Reference Library Quick Banner */}
+      <div className="glass-card rounded-2xl p-4 border border-amber-500/30 bg-gradient-to-r from-amber-950/30 via-slate-900 to-slate-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
+            <BookOpen className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h4 className="text-xs font-bold text-slate-100 uppercase tracking-wider">
+                Burner Defect Reference Library
+              </h4>
+              <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                5 Defect Standards
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              Review official comparative visual standards: Chipping, Missing/Blocked Ports, Cracks, Deformation, and Oxidation.
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('reference-library')}
+          className="px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 shrink-0"
+        >
+          <span>Browse Reference Library</span>
+        </button>
+      </div>
+
       {/* 1. SIMULATED PRESETS SECTION */}
       <div className="glass-card rounded-2xl p-4 border border-slate-800 space-y-2.5">
         <div className="flex items-center justify-between">
@@ -227,165 +236,7 @@ export function UploadZone() {
         </div>
       </div>
 
-      {/* 2. REAL BURNER TEST IMAGES SECTION */}
-      <div className="glass-card rounded-2xl p-5 border border-slate-800 space-y-4 shadow-xl">
-        <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
-          <div className="flex items-center gap-2">
-            <Flame className="w-5 h-5 text-amber-400" />
-            <div>
-              <h3 className="font-bold text-slate-100 text-sm tracking-wide">
-                Real Burner Test Images
-              </h3>
-              <p className="text-[11px] text-slate-400">
-                High-resolution circular cast-iron burner photographs for reference and robustness evaluation
-              </p>
-            </div>
-          </div>
-          <span className="hidden sm:inline-flex text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-semibold">
-            9 Real Photos
-          </span>
-        </div>
-
-        {/* Category A: Good / Normal Burner */}
-        <div className="space-y-2.5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-              <h4 className="text-xs font-bold text-emerald-300 uppercase tracking-wider">
-                Good / Normal Burner
-              </h4>
-              <span className="text-[11px] text-slate-400 font-normal">
-                — Verified good-condition burner reference images
-              </span>
-            </div>
-            <span className="text-[10px] font-mono text-emerald-400/80">3 Verified Good</span>
-          </div>
-
-          <div className="grid grid-cols-3 gap-3">
-            {GOOD_BURNER_IMAGES.map((imgPath) => {
-              const filename = imgPath.split('/').pop();
-              const isSelected = selectedRealImage === imgPath;
-              const hasError = imageLoadErrors[imgPath];
-
-              return (
-                <button
-                  key={imgPath}
-                  type="button"
-                  onClick={() => loadRealTestImage(imgPath, 'good')}
-                  className={`group relative rounded-xl border p-2 text-left transition-all overflow-hidden flex flex-col gap-1.5 ${
-                    isSelected
-                      ? 'bg-emerald-950/30 border-emerald-500 ring-2 ring-emerald-500/30 shadow-lg shadow-emerald-950/50'
-                      : 'bg-slate-900/90 border-slate-800 hover:border-emerald-500/40 hover:bg-slate-800/60'
-                  }`}
-                >
-                  <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-slate-950 flex items-center justify-center border border-slate-800">
-                    {hasError ? (
-                      <div className="p-2 text-center text-[10px] text-rose-400 flex flex-col items-center gap-1">
-                        <AlertCircle className="w-4 h-4 text-rose-400" />
-                        <span>Missing file</span>
-                        <code className="text-[9px] text-slate-500 truncate max-w-full">{filename}</code>
-                      </div>
-                    ) : (
-                      <img
-                        src={imgPath}
-                        alt={filename}
-                        onError={() => handleImageError(imgPath)}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        loading="lazy"
-                      />
-                    )}
-                    {isSelected && (
-                      <div className="absolute top-1.5 right-1.5 bg-emerald-500 text-slate-950 p-1 rounded-md shadow">
-                        <Check className="w-3 h-3 stroke-[3]" />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between w-full">
-                    <span className="font-mono text-[11px] font-bold text-slate-200 truncate">
-                      {filename}
-                    </span>
-                    <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                      Good Ref
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Category B: Real-World Test Images */}
-        <div className="space-y-2.5 pt-2 border-t border-slate-800/60">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
-              <h4 className="text-xs font-bold text-cyan-300 uppercase tracking-wider">
-                Real-World Test Images
-              </h4>
-              <span className="text-[11px] text-slate-400 font-normal">
-                — Real images for robustness testing. These are not automatically classified as damaged.
-              </span>
-            </div>
-            <span className="text-[10px] font-mono text-cyan-400/80">6 Robustness Tests</span>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
-            {CHALLENGING_BURNER_IMAGES.map((imgPath) => {
-              const filename = imgPath.split('/').pop();
-              const isSelected = selectedRealImage === imgPath;
-              const hasError = imageLoadErrors[imgPath];
-
-              return (
-                <button
-                  key={imgPath}
-                  type="button"
-                  onClick={() => loadRealTestImage(imgPath, 'challenging')}
-                  className={`group relative rounded-xl border p-1.5 text-left transition-all overflow-hidden flex flex-col gap-1 ${
-                    isSelected
-                      ? 'bg-cyan-950/30 border-cyan-500 ring-2 ring-cyan-500/30 shadow-lg shadow-cyan-950/50'
-                      : 'bg-slate-900/90 border-slate-800 hover:border-cyan-500/40 hover:bg-slate-800/60'
-                  }`}
-                >
-                  <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-slate-950 flex items-center justify-center border border-slate-800">
-                    {hasError ? (
-                      <div className="p-1 text-center text-[9px] text-rose-400 flex flex-col items-center gap-0.5">
-                        <AlertCircle className="w-3.5 h-3.5 text-rose-400" />
-                        <span>Missing</span>
-                        <code className="text-[8px] text-slate-500 truncate max-w-full">{filename}</code>
-                      </div>
-                    ) : (
-                      <img
-                        src={imgPath}
-                        alt={filename}
-                        onError={() => handleImageError(imgPath)}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        loading="lazy"
-                      />
-                    )}
-                    {isSelected && (
-                      <div className="absolute top-1 right-1 bg-cyan-500 text-slate-950 p-0.5 rounded shadow">
-                        <Check className="w-3 h-3 stroke-[3]" />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between w-full">
-                    <span className="font-mono text-[10px] font-bold text-slate-200 truncate">
-                      {filename}
-                    </span>
-                    <span className="text-[8px] font-semibold px-1 py-0.2 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                      Robust
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* 3. MAIN UPLOAD / CAMERA / PREVIEW ZONE */}
+      {/* 2. MAIN UPLOAD / CAMERA / PREVIEW ZONE */}
       <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-4 shadow-xl">
         {isCameraActive ? (
           <div className="relative w-full aspect-video max-w-md mx-auto rounded-xl overflow-hidden bg-slate-950 border border-slate-800 flex flex-col items-center justify-center">
@@ -429,7 +280,7 @@ export function UploadZone() {
                 Upload or Capture Burner Photo
               </h3>
               <p className="text-xs text-slate-400 mt-1 max-w-md">
-                Drag and drop your circular multi-ring gas burner image here, browse your files, or select one of the real test images above.
+                Drag and drop your circular multi-ring gas burner image here, browse your files, or capture with camera.
               </p>
             </div>
 
@@ -509,6 +360,12 @@ export function UploadZone() {
                 )}
               </div>
             </div>
+
+            {/* Step 3: Optional Inspection Scope Selector */}
+            <InspectionScopeSelector
+              selectedScope={inspectionScope}
+              onSelectScope={setInspectionScope}
+            />
 
             <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
               <button
