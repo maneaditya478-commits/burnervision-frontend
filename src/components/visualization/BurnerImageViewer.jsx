@@ -1,13 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { renderBurnerOverlayCanvas } from '../../services/canvasOverlay';
 import { MapLegend } from './MapLegend';
-import { Layers, Eye, ShieldAlert, Sparkles, Activity, Camera, CheckCircle2 } from 'lucide-react';
+import { Layers, Eye, ShieldAlert, Sparkles, Activity, Camera, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
 
 export function BurnerImageViewer({ report }) {
   const [activeOverlay, setActiveOverlay] = useState('annotated');
   const canvasRef = useRef(null);
   const imageObjRef = useRef(null);
-  const [imageLoaded, setImageLoaded] = useState(false);
+  const [loadedSrc, setLoadedSrc] = useState(null);
+  const [failedSrc, setFailedSrc] = useState(null);
+
+  const currentSrc = report?.original_image;
+  const imageLoaded = loadedSrc === currentSrc;
+  const hasImageError = failedSrc === currentSrc;
 
   const overlays = [
     { id: 'original', label: 'Original Image', icon: Eye },
@@ -18,16 +23,27 @@ export function BurnerImageViewer({ report }) {
   ];
 
   useEffect(() => {
-    if (!report?.original_image) return;
+    if (!currentSrc) return;
 
+    let isMounted = true;
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    img.src = report.original_image;
+    img.src = currentSrc;
     img.onload = () => {
+      if (!isMounted) return;
       imageObjRef.current = img;
-      setImageLoaded(true);
+      setLoadedSrc(currentSrc);
     };
-  }, [report?.original_image]);
+    img.onerror = () => {
+      if (!isMounted) return;
+      console.warn('Failed to load burner image for canvas overlay');
+      setFailedSrc(currentSrc);
+    };
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentSrc]);
 
   useEffect(() => {
     if (imageLoaded && canvasRef.current && imageObjRef.current && report) {
@@ -87,6 +103,27 @@ export function BurnerImageViewer({ report }) {
           height={600}
           className="w-full h-full object-contain"
         />
+
+        {/* Loading Overlay */}
+        {!imageLoaded && !hasImageError && (
+          <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-xs flex flex-col items-center justify-center gap-2 z-10">
+            <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+            <span className="text-xs font-mono text-slate-400">Rendering visual overlay...</span>
+          </div>
+        )}
+
+        {/* Image Load Failure Fallback */}
+        {hasImageError && (
+          <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center gap-3 z-10">
+            <div className="p-3 bg-amber-500/10 rounded-2xl border border-amber-500/30 text-amber-400">
+              <AlertTriangle className="w-8 h-8" />
+            </div>
+            <h4 className="text-sm font-bold text-slate-100">Burner Visual Preview Unavailable</h4>
+            <p className="text-xs text-slate-400 max-w-xs">
+              The original photo could not be rendered on the overlay canvas. Diagnostic metrics and defect detections are available below.
+            </p>
+          </div>
+        )}
 
         {/* Dynamic Mode Badge overlay on canvas */}
         <div className={`absolute top-3 left-3 backdrop-blur-md border text-[11px] font-mono px-2.5 py-1 rounded-md flex items-center gap-1.5 shadow-lg ${
